@@ -3,7 +3,7 @@ frey_bar_glass_rule = hl.layer_rule({
   name = "frey-bar-glass",
   match = { namespace = "^omarchy-bar$" },
   blur = true,
-  ignore_alpha = 0.08,
+  ignore_alpha = 0.001,
 })
 local config_file = io.open(os.getenv("HOME") .. "/.config/omarchy/shell.json", "r")
 local enabled = false
