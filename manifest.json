@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "frey.bar",
+  "name": "Frey Bar",
+  "version": "1.1.0",
+  "author": "frey",
+  "description": "Customizable Omarchy bar with presets, automatic text contrast, glass effects, and a Simple/Advanced editor",
+  "kinds": [
+    "bar"
+  ],
+  "entryPoints": {
+    "bar": "Bar.qml"
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.bar"
+  }
+}
