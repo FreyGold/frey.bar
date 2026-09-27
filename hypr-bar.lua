@@ -12,5 +12,9 @@ if config_file then
   config_file:close()
   enabled = text:match('"id"%s*:%s*"frey%.bar"') ~= nil
     and text:match('"blurEnabled"%s*:%s*(%a+)') == "true"
+  local strength = tonumber(text:match('"blurStrength"%s*:%s*(%d+)'))
+  if text:match('"id"%s*:%s*"frey%.bar"') and strength then
+    hl.config({decoration = {blur = {size = math.max(1, math.min(20, strength))}}})
+  end
 end
 frey_bar_glass_rule:set_enabled(enabled)

@@ -48,7 +48,7 @@ KeyboardPanel {
 
                 Text {
                     width: parent.width
-                    text: popup.activeTab === "simple" ? "Style and opacity" : "Colors and spacing"
+                    text: popup.activeTab === "simple" ? "Style and opacity" : popup.activeTab === "blur" ? "Blur strength" : "Colors and spacing"
                     color: Color.foreground
                     font.family: popup.bar.fontFamily
                     font.pixelSize: Style.font.caption
@@ -75,7 +75,7 @@ KeyboardPanel {
                 {
                     value: "advanced",
                     label: "Advanced"
-                }
+                }, {value: "blur", label: "Blur"}
             ]
             value: popup.activeTab
             foreground: Color.foreground
@@ -370,7 +370,7 @@ KeyboardPanel {
 
         Flickable {
             id: advancedScroll
-            visible: popup.activeTab === "advanced"
+            visible: popup.activeTab === "advanced" || popup.activeTab === "blur"
             width: parent.width
             height: Math.min(advancedContent.implicitHeight, Style.space(440), Math.max(180, popup.availableCardHeight - Style.space(340)))
             contentWidth: width
@@ -385,7 +385,7 @@ KeyboardPanel {
                 spacing: Style.space(12)
 
                 Text {
-                    visible: popup.advancedCategory === "text"
+                    visible: popup.activeTab === "advanced" && popup.advancedCategory === "text"
                     text: "TEXT & ICON COLOR"
                     color: Color.foreground
                     font.family: popup.bar.fontFamily
@@ -394,7 +394,7 @@ KeyboardPanel {
                 }
 
                 ButtonGroup {
-                    visible: popup.advancedCategory === "text"
+                    visible: popup.activeTab === "advanced" && popup.advancedCategory === "text"
                     options: [
                         {
                             value: "auto",
@@ -429,7 +429,7 @@ KeyboardPanel {
 
                 TextField {
                     width: parent.width
-                    visible: popup.advancedCategory === "text" && popup.bar.textColorMode === "custom"
+                    visible: popup.activeTab === "advanced" && popup.advancedCategory === "text" && popup.bar.textColorMode === "custom"
                     text: popup.bar.customTextColor
                     placeholderText: "Text color: #ffffff"
                     validator: RegularExpressionValidator {
@@ -443,7 +443,7 @@ KeyboardPanel {
 
                 Text {
                     width: parent.width
-                    visible: popup.advancedCategory === "text" && popup.bar.textColorMode === "auto"
+                    visible: popup.activeTab === "advanced" && popup.advancedCategory === "text" && popup.bar.textColorMode === "auto"
                     text: "Auto balances wallpaper brightness with background opacity."
                     color: Color.foreground
                     font.pixelSize: Style.font.caption
@@ -451,7 +451,7 @@ KeyboardPanel {
                 }
 
                 Text {
-                    visible: popup.advancedCategory === "background"
+                    visible: popup.activeTab === "advanced" && popup.advancedCategory === "background"
                     text: "BACKGROUND COLOR"
                     color: Color.foreground
                     font.pixelSize: Style.font.caption
@@ -459,7 +459,7 @@ KeyboardPanel {
                 }
 
                 Row {
-                    visible: popup.advancedCategory === "background"
+                    visible: popup.activeTab === "advanced" && popup.advancedCategory === "background"
                     width: parent.width
                     spacing: Style.space(8)
                     TextField {
@@ -537,7 +537,7 @@ KeyboardPanel {
                     ]
                     delegate: Column {
                         required property var modelData
-                        visible: modelData.category === popup.advancedCategory
+                        visible: popup.activeTab === "advanced" && modelData.category === popup.advancedCategory
                         width: parent.width
                         spacing: Style.space(4)
                         Text {
@@ -568,7 +568,7 @@ KeyboardPanel {
 
                 Toggle {
                     width: parent.width
-                    visible: popup.advancedCategory === "background"
+                    visible: popup.activeTab === "blur"
                     label: "Background blur"
                     description: "Frosted surfaces; visible below 100% opacity"
                     checked: popup.bar.blurEnabled
@@ -576,6 +576,34 @@ KeyboardPanel {
                     onClicked: popup.bar.setAppearance({
                         blurEnabled: !popup.bar.blurEnabled
                     })
+                }
+
+                Column {
+                    visible: popup.activeTab === "blur"
+                    width: parent.width
+                    spacing: Style.space(8)
+                    Text {
+                        text: "Strength: " + popup.bar.blurStrength
+                        color: Color.foreground
+                        font.pixelSize: Style.font.body
+                    }
+                    AppearanceSlider {
+                        width: parent.width
+                        minimum: 1
+                        maximum: 20
+                        step: 1
+                        integer: true
+                        value: popup.bar.blurStrength
+                        onMoved: function(value) { popup.bar.setAppearance({blurStrength: value}, false) }
+                        onReleased: function(value) { popup.bar.setAppearance({blurStrength: value}) }
+                    }
+                    Text {
+                        width: parent.width
+                        text: "Hyprland shares blur strength across windows and panels. Higher values soften more detail. Bar blur is visible below 100% opacity."
+                        color: Color.foreground
+                        font.pixelSize: Style.font.caption
+                        wrapMode: Text.WordWrap
+                    }
                 }
 
                 Repeater {
@@ -595,7 +623,7 @@ KeyboardPanel {
                     ]
                     delegate: Column {
                         required property var modelData
-                        visible: modelData.category === popup.advancedCategory
+                        visible: popup.activeTab === "advanced" && modelData.category === popup.advancedCategory
                         width: parent.width
                         spacing: Style.space(4)
                         Text {
@@ -634,7 +662,7 @@ KeyboardPanel {
                 }
                 Text {
                     width: parent.width
-                    visible: popup.advancedCategory === "layout"
+                    visible: popup.activeTab === "advanced" && popup.advancedCategory === "layout"
                     text: "Choosing a Simple style restores its default corner radius."
                     color: Color.foreground
                     font.pixelSize: Style.font.caption

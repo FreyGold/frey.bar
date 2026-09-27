@@ -64,6 +64,8 @@ Item {
   property real widgetPadding: 0
   property bool showAppearanceButton: true
   property bool blurEnabled: false
+  property int blurStrength: 12
+  property bool blurStrengthConfigured: false
   property real borderStrength: 0.12
   property string customBorderColor: ""
   property real shadowStrength: 0
@@ -655,7 +657,7 @@ Item {
     return { style: surfaceStyle, opacity: surfaceOpacity, transparent: requestedTransparent,
       textColorMode: textColorMode, textColor: customTextColor,
       backgroundColor: customBackgroundColor, widgetGap: widgetGap, widgetPadding: widgetPadding,
-      blurEnabled: blurEnabled, borderStrength: borderStrength, borderColor: customBorderColor,
+      blurEnabled: blurEnabled, blurStrength: blurStrength, borderStrength: borderStrength, borderColor: customBorderColor,
       shadowStrength: shadowStrength, cornerRadius: cornerRadius,
       hoverStrength: hoverStrength, accentColor: customAccentColor, showAppearanceButton: showAppearanceButton }
   }
@@ -671,6 +673,11 @@ Item {
     widgetGap = Util.clamp(Number(merged.widgetGap) || 0, 0, 16)
     widgetPadding = Util.clamp(Number(merged.widgetPadding) || 0, 0, 16)
     blurEnabled = merged.blurEnabled === true
+    if (values.blurStrength !== undefined && values.blurStrength !== null) {
+      blurStrength = Math.round(Util.clamp(Number(values.blurStrength) || 1, 1, 20))
+      blurStrengthConfigured = true
+      blurRuleTimer.restart()
+    }
     borderStrength = Util.clamp(Number(merged.borderStrength) || 0, 0, 1)
     customBorderColor = /^#[0-9a-fA-F]{6}$/.test(merged.borderColor) ? merged.borderColor : ""
     shadowStrength = Util.clamp(Number(merged.shadowStrength) || 0, 0, 0.6)
@@ -725,16 +732,32 @@ Item {
   }
 
   onBlurEnabledChanged: blurRuleTimer.restart()
+  onBlurStrengthChanged: if (blurStrengthConfigured) blurRuleTimer.restart()
   Timer {
     id: blurRuleTimer
     interval: 80
     onTriggered: {
-      blurRuleProc.command = ["hyprctl", "eval", "if frey_bar_glass_rule then frey_bar_glass_rule:set_enabled(" + (root.blurEnabled ? "true" : "false") + ") end"]
+      var code = "if frey_bar_glass_rule then frey_bar_glass_rule:set_enabled(" + (root.blurEnabled ? "true" : "false") + ") end"
+      if (root.blurStrengthConfigured) code += "; hl.config({decoration={blur={size=" + root.blurStrength + "}}})"
+      blurRuleProc.command = ["hyprctl", "eval", code]
       if (!blurRuleProc.running) blurRuleProc.running = true
       else restart()
     }
   }
   Process { id: blurRuleProc }
+
+  Process {
+    id: blurStrengthProbe
+    command: ["hyprctl", "-j", "getoption", "decoration:blur:size"]
+    stdout: StdioCollector {
+      onStreamFinished: {
+        try {
+          var size = JSON.parse(text).int
+          if (!root.blurStrengthConfigured && isFinite(size)) root.blurStrength = Util.clamp(size, 1, 20)
+        } catch (e) { }
+      }
+    }
+  }
 
   function refreshWallpaperSample() {
     if (!wallpaperSampleProc.running) wallpaperSampleProc.running = true
@@ -824,7 +847,7 @@ Item {
     setAppearance({textColorMode: config.textColorMode || "theme", textColor: config.textColor || "#ffffff",
       backgroundColor: config.backgroundColor || "", widgetGap: config.widgetGap === undefined ? 2 : config.widgetGap,
       widgetPadding: config.widgetPadding || 0,
-      blurEnabled: config.blurEnabled === true, borderStrength: config.borderStrength === undefined ? 0.12 : config.borderStrength,
+      blurEnabled: config.blurEnabled === true, blurStrength: config.blurStrength === undefined ? null : config.blurStrength, borderStrength: config.borderStrength === undefined ? 0.12 : config.borderStrength,
       borderColor: config.borderColor || "", shadowStrength: config.shadowStrength || 0,
       cornerRadius: config.cornerRadius === undefined ? -1 : config.cornerRadius,
       hoverStrength: config.hoverStrength === undefined ? 0.12 : config.hoverStrength, accentColor: config.accentColor || "",
@@ -1059,6 +1082,7 @@ Item {
   Component.onCompleted: {
     applyBarConfig()
     blurRuleTimer.restart()
+    blurStrengthProbe.running = true
   }
 
   // Revealing the indicators widens their section, which can slide a neighbour
@@ -1442,7 +1466,7 @@ Item {
       root.setSurfaceStyle(name, false)
     }
     function tab(name: string): void {
-      if (name !== "simple" && name !== "advanced") return
+      if (name !== "simple" && name !== "advanced" && name !== "blur") return
       for (var i = 0; i < root.styleEditors.length; i++) root.styleEditors[i].activeTab = name
     }
     function preview(json: string): void {

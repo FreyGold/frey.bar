@@ -72,7 +72,7 @@ The Hyprland integration checks whether the plugin rule file exists, so removing
 
 Auto chooses a single black or white foreground using the wallpaper strip behind the primary monitor's bar, blended with background color and opacity. It does not sample application windows or choose a separate foreground for each widget.
 
-Shape, borders, and shadows apply to widget styles; Original retains the continuous stock surface. Blur is most visible below 100% opacity and uses the compositor's existing blur strength. Accent color applies to the focused workspace, active widget states, and appearance editor selections. Widgets that hard-code their own colors may not follow it.
+Shape, borders, and shadows apply to widget styles; Original retains the continuous stock surface. Blur is most visible below 100% opacity. The dedicated Blur tab includes an enable switch and a strength slider (1–20). Strength changes Hyprland's shared blur size, so it also affects other blurred windows and panels; settings persist across shell restarts and Hyprland reloads. Accent color applies to the focused workspace, active widget states, and appearance editor selections. Widgets that hard-code their own colors may not follow it.
 
 Settings are stored under `bar` in `~/.config/omarchy/shell.json`. The bar uses installed Omarchy shell components and may need updates when their APIs change.
 
